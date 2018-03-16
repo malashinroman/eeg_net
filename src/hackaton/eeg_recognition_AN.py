@@ -63,21 +63,35 @@ def create_network_eeg_conv1(input_dim, num_classes):
 
 
 def main():
-    EEG_FILENAME = 'D0000168'
-    CHANNELS_NUM = 21
+    EXP_NUM = 21 # total number of people
+    EXP_SHIFT = 167 # shift in numerations
+    CHANNELS_NUM = 21 # number of channels in EEG record
     sel_channels = slice(0, CHANNELS_NUM)
-    EEG = load_mat_file('eegmat_selected/' + EEG_FILENAME, 's')
-    X_data = EEG["eeg"][0][0]
-    Y_data = EEG["mrk"][0][0]
-    OneChannel_data = X_data[:, sel_channels, :]
-    OneChannel_data = OneChannel_data.reshape(OneChannel_data.shape[2], OneChannel_data.shape[0]*OneChannel_data.shape[1])
-    size_of_sample = OneChannel_data.shape[1]
-    number_of_samples = OneChannel_data.shape[0]
-    Y_data = Y_data - 1
-    Y_data = Y_data.reshape(Y_data.shape[0])
-    num_classes = max(Y_data) + 1
-    y_= keras.utils.to_categorical(Y_data, num_classes)
-    x_= OneChannel_data
+    all_data = np.array([])
+    all_Y = np.array([])
+    for eeg_num in range(1, EXP_NUM + 1):
+        EEG_FILENAME = 'eegmat_selected/D0000' + str(eeg_num + EXP_SHIFT)
+        EEG = load_mat_file(EEG_FILENAME, 's')
+        X_data = EEG["eeg"][0][0]
+        X_data = np.swapaxes(X_data, 2, 0)
+        X_data = np.swapaxes(X_data, 1, 2)
+        Y_data = EEG["mrk"][0][0]
+        OneChannel_data = X_data[:, sel_channels, :]
+        OneChannel_data = OneChannel_data.reshape(OneChannel_data.shape[0], OneChannel_data.shape[1]*OneChannel_data.shape[2])
+        if eeg_num == 1:
+            all_data = np.array([]).reshape(0, OneChannel_data.shape[1])
+            all_Y = np.array([]).reshape(0, Y_data.shape[1])
+        all_data = np.concatenate([all_data, OneChannel_data])
+        all_Y = np.concatenate([all_Y, Y_data])
+    
+    size_of_sample = all_data.shape[1]
+    number_of_samples = all_data.shape[0]
+    all_Y = all_Y.astype(int) - 1
+    all_Y = all_Y.reshape(all_Y.shape[0])
+    num_classes = max(all_Y) + 1
+    y_= keras.utils.to_categorical(all_Y, num_classes)
+    x_= all_data
+
     test_prop = 0.1
     test_size= round(test_prop * number_of_samples, 0)
     test_size = int(test_size)
