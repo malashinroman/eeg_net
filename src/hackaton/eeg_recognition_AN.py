@@ -73,9 +73,11 @@ def main():
         EEG_FILENAME = 'eegmat_selected/D0000' + str(eeg_num + EXP_SHIFT)
         EEG = load_mat_file(EEG_FILENAME, 's')
         X_data = EEG["eeg"][0][0]
+        X_data = np.swapaxes(X_data, 2, 0)
+        X_data = np.swapaxes(X_data, 1, 2)
         Y_data = EEG["mrk"][0][0]
         OneChannel_data = X_data[:, sel_channels, :]
-        OneChannel_data = OneChannel_data.reshape(OneChannel_data.shape[2], OneChannel_data.shape[0]*OneChannel_data.shape[1])
+        OneChannel_data = OneChannel_data.reshape(OneChannel_data.shape[0], OneChannel_data.shape[1]*OneChannel_data.shape[2])
         if eeg_num == 1:
             all_data = np.array([]).reshape(0, OneChannel_data.shape[1])
             all_Y = np.array([]).reshape(0, Y_data.shape[1])
@@ -86,7 +88,7 @@ def main():
     number_of_samples = all_data.shape[0]
     all_Y = all_Y.astype(int) - 1
     all_Y = all_Y.reshape(all_Y.shape[0])
-    num_classes = max(Y_data) + 1
+    num_classes = max(all_Y) + 1
     y_= keras.utils.to_categorical(all_Y, num_classes)
     x_= all_data
 
