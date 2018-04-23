@@ -1,0 +1,7 @@
+Numpy
+pyEDFlib
+matplotlib
+sklearn
+scipy
+PyWavelets
+xlwt
